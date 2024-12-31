@@ -1,0 +1,70 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+venv/
+env/
+
+# Flask instance folder
+instance/
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# VS Code
+.vscode/
+
+# Python egg files
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info/
+
+# pytest
+.cache/
+
+# MyPy
+.mypy_cache/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Coverage reports
+htmlcov/
+.coverage
+*.cover
+*.py,cover
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# macOS-specific
+.DS_Store
+
+# Windows-specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor-specific
+*.swp
+*.swo
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Docker-related
+docker-compose.override.yml
+.env
+
+# Debug and profiling
+*.prof
+*.log

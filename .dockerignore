@@ -1,0 +1,43 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Virtual Environment
+venv/
+env/
+
+# Ignore local configuration files
+instance/
+
+# Ignore logs and databases
+*.log
+*.sqlite3
+
+# Ignore .git and Git-related files
+.git
+.gitignore
+
+# Ignore VS Code and IDE configurations
+.vscode/
+.idea/
+
+# Ignore temporary or build artifacts
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+*.egg-info/
+dist/
+build/
+
+# Ignore test reports and coverage
+.coverage
+*.cover
+htmlcov/
+
+# Ignore dotenv files
+.env

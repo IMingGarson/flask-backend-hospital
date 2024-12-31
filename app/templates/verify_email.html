@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css')}}" type="text/css" />
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="header">
+                <h1>驗證您的 Email</h1>
+            </div>
+            <div class="content">
+                <p>您好 {name}，</p>
+                <p>
+                    您可以點擊下方按鈕驗證您的 Email 並完成註冊，請注意，此連結將在<strong>10分鐘內</strong>過期。
+                </p>
+                <p style="text-align: center;">
+                    <a href="{confirm_url}" class="verify-button">驗證我的 Email</a>
+                </p>
+                <p>
+                    如果按鈕沒有正確引導您到驗證頁面，請直接複製下方網址到瀏覽器內驗證：
+                </p>
+                <p style="word-wrap: break-word;">
+                    <a href="{confirm_url}">{confirm_url}</a>
+                </p>
+            </div>
+            <div class="footer">
+                <p>此 Email 是系統自動發送，請勿直接回覆。</p>
+            </div>
+        </div>
+    </body>
+</html>

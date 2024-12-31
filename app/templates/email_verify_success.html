@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                margin: 0;
+                padding: 0;
+                color: #333;
+            }
+            .container {
+                max-width: 600px;
+                margin: 50px auto;
+                background-color: #ffffff;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+            .header {
+                background-color: #ff8c42;
+                color: #ffffff;
+                padding: 20px;
+                border-radius: 10px 10px 0 0;
+            }
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+            .content {
+                padding: 20px;
+                font-size: 16px;
+            }
+            @media (max-width: 600px) {
+                .container {
+                    margin: 20px;
+                    width: 90%;
+                }
+                .header h1 {
+                    font-size: 20px;
+                }
+                .content {
+                    font-size: 14px;
+                }
+            }
+        </style>
+    </head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Email 驗證成功</h1>
+        </div>
+        <div class="content">
+            <p>您的 Email 已成功驗證！</p>
+            <p>請返回 App 並登入後即可使用。</p>
+        </div>
+    </div>
+</body>
+</html>
