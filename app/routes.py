@@ -12,6 +12,14 @@ mail = Mail()
 user_bp = Blueprint('user', __name__, url_prefix='/api/user')
 patient_bp = Blueprint('patient', __name__)
 
+@user_bp.route('/test', methods=['GET'])
+def test_route():
+    user = User.query.all()
+    return jsonify({
+        "message": "",
+        "patients": [u.to_dict() for u in user]
+    }), 200
+
 @user_bp.route('/send_verify_email', methods=['GET'])
 def send_verify_email():
     id = request.args.get('id')
