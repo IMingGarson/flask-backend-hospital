@@ -244,8 +244,7 @@ def get_data():
     return method()
 
 # 病患透過邀請碼註冊
-@patient_bp.route('/api/patient', methods=['POST', 'OPTIONS'])
-@cross_origin()
+@patient_bp.route('/api/patient', methods=['POST'])
 def add_patient():
     if request.method == 'OPTIONS':
         return '', 200
@@ -254,18 +253,18 @@ def add_patient():
         data = request.get_json()
         name = data.get('name')
         email = data.get('email')
+        password = data.get('password')
         birthday = data.get('birthday')
         invide_code = data.get('inviteCode')
 
-        if not name or not email or not birthday or not invide_code or invide_code != '123456':
+        if not name or not email or not password or not birthday or not invide_code or invide_code != '123456':
             return jsonify({"message": "Patient name and email are required."}), 400
 
         existing_patient = Patient.query.filter_by(email=email).first()
         if existing_patient:
             return jsonify({"message": "A patient with this email already exists."}), 400
 
-        hashed_password = hash_password(current_app.config['TEMP_PASSWORD'])
-
+        hashed_password = hash_password(password)
         new_patient = Patient(
             name=name,
             email=email,
@@ -296,43 +295,33 @@ def add_patient():
     return method()
 
 # 病患登入
-@patient_bp.route('/api/patient/signin', methods=['POST', 'OPTIONS'])
+@patient_bp.route('/api/patient/signin', methods=['POST'])
 def patient_signin():
-    if request.method == 'OPTIONS':
-        return '', 200
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
+        return jsonify({"message": "Missing email or password"}), 400
     
-    def method():
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-
-        if not email or not password:
-            return jsonify({"message": "Missing email or password"}), 400
-        
-        patient = Patient.query.filter_by(email=email).first()
-        if not patient:
-            return jsonify({"message": "User not found"}), 404
-        
-        actual_pass = check_password(password, patient.password)
-        if not actual_pass:
-            return jsonify({"message": "Incorrect password"}), 401
-
-        if not patient:
-            return jsonify({"message": "User not found"}), 404
-        
-        access_token = create_access_token(
-            identity=str(patient.id),
-            expires_delta=timedelta(days=7)
-        )
-
-        return jsonify({
-            "message": "Login successful",
-            "access_token": access_token,
-            "role": "P",
-        }), 200
+    patient = Patient.query.filter_by(email=email).first()
+    if not patient:
+        return jsonify({"message": "User not found"}), 404
     
-    return method()
+    if not check_password(password, patient.password):
+        return jsonify({"message": "Incorrect password"}), 401
+    
+    access_token = create_access_token(
+        identity=str(patient.id),
+        expires_delta=timedelta(days=7)
+    )
 
+    return jsonify({
+        "message": "Login successful",
+        "access_token": access_token,
+        "role": "P",
+    }), 200
+    
 # 病患取得 PSA 資料
 @patient_bp.route('/api/patient/psa', methods=['GET', 'OPTIONS'])
 @cross_origin()
