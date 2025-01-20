@@ -14,7 +14,6 @@ def validate_date(date_str):
 def validate(email):
     try:
         v = validate_email(email)
-        print(v)
         return v['email']
     except EmailNotValidError as e:
         print(str(e))

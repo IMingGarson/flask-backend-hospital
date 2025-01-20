@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, url_for, current_app, render_template
-from app.models import db, User, Patient, PSA
+from sqlalchemy.orm import joinedload
+from app.models import db, User, Patient, PSA, Symptom
 from app.utils import validate_date, validate, hash_password, check_password, generate_confirmation_token, confirm_token, validate_email
 from flask_mail import Message, Mail
 from sqlalchemy.exc import IntegrityError
@@ -20,6 +21,7 @@ def test_route():
         "patients": [u.to_dict() for u in user]
     }), 200
 
+# 寄送驗證 Email (暫時棄用)
 @user_bp.route('/send_verify_email', methods=['GET'])
 def send_verify_email():
     id = request.args.get('id')
@@ -76,6 +78,7 @@ def send_verify_email():
 
     return render_template('email_verify_resend.html')
 
+# 醫護人員註冊帳號
 @user_bp.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
@@ -90,7 +93,7 @@ def signup():
         return jsonify({"message": "Invalid email"}), 400
 
     hashed_password = hash_password(password)
-    new_user = User(email=email, name=name, password=hashed_password)
+    new_user = User(email=email, name=name, password=hashed_password, is_active=True)
 
     try:
         db.session.add(new_user)
@@ -99,51 +102,51 @@ def signup():
         db.session.rollback()
         return jsonify({"message": "Email error"}), 400
 
-    token = generate_confirmation_token(email)
-    confirm_url = url_for('user.verify_user_email', token=token, _external=True)
+    return jsonify({"message": "User registered successfully."}), 201
+    # token = generate_confirmation_token(email)
+    # confirm_url = url_for('user.verify_user_email', token=token, _external=True)
 
-    msg = Message('Please confirm your email', sender=current_app.config['MAIL_USERNAME'], recipients=[email])
-    html = f"""
-            <!DOCTYPE html>
-            <html>
-            <body bgcolor="#ffffff" style="font-family: Arial, sans-serif; background-color: #fffaf0; margin: 0; padding: 0; color: #4a4a4a;">
-                <table align="center" style="background-color: #ffffff; border-collapse: collapse; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); margin: 20px auto; padding: 20px;">
-                    <tr>
-                        <td align="center" style="background-color: #ff8c42; border-radius: 10px 10px 0 0; color: #ffffff; padding: 10px;">
-                            <h1 style="margin: 0; font-size: 24px;">驗證您的 Email</h1>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 20px; line-height: 1.6; font-size: 16px; color: #4a4a4a;">
-                            <p>您好 {name}，</p>
-                            <p>
-                                您可以點擊下方按鈕驗證您的 Email 並完成註冊，請注意，此連結將在<strong>10分鐘內</strong>過期。
-                            </p>
-                            <p style="text-align: center;">
-                                <a href="{confirm_url}" class="verify-button" style="display: inline-block; padding: 10px 20px; color: #ffffff; background-color: #ff8c42; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">驗證我的 Email</a>
-                            </p>
-                            <p>
-                                如果按鈕沒有正確引導您到驗證頁面，請直接複製下方網址到瀏覽器內驗證：
-                            </p>
-                            <p style="word-wrap: break-word;">
-                                <a href="{confirm_url}" style="color: #ff8c42; text-decoration: none;">{confirm_url}</a>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td align="center" style="font-size: 12px; color: #999; padding: 20px;">
-                            <p>此 Email 是系統自動發送，請勿直接回覆。</p>
-                        </td>
-                    </tr>
-                </table>
-            </body>
-            </html>
-            """
-    msg.html = html
-    mail.send(msg)
+    # msg = Message('Please confirm your email', sender=current_app.config['MAIL_USERNAME'], recipients=[email])
+    # html = f"""
+    #         <!DOCTYPE html>
+    #         <html>
+    #         <body bgcolor="#ffffff" style="font-family: Arial, sans-serif; background-color: #fffaf0; margin: 0; padding: 0; color: #4a4a4a;">
+    #             <table align="center" style="background-color: #ffffff; border-collapse: collapse; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); margin: 20px auto; padding: 20px;">
+    #                 <tr>
+    #                     <td align="center" style="background-color: #ff8c42; border-radius: 10px 10px 0 0; color: #ffffff; padding: 10px;">
+    #                         <h1 style="margin: 0; font-size: 24px;">驗證您的 Email</h1>
+    #                     </td>
+    #                 </tr>
+    #                 <tr>
+    #                     <td style="padding: 20px; line-height: 1.6; font-size: 16px; color: #4a4a4a;">
+    #                         <p>您好 {name}，</p>
+    #                         <p>
+    #                             您可以點擊下方按鈕驗證您的 Email 並完成註冊，請注意，此連結將在<strong>10分鐘內</strong>過期。
+    #                         </p>
+    #                         <p style="text-align: center;">
+    #                             <a href="{confirm_url}" class="verify-button" style="display: inline-block; padding: 10px 20px; color: #ffffff; background-color: #ff8c42; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">驗證我的 Email</a>
+    #                         </p>
+    #                         <p>
+    #                             如果按鈕沒有正確引導您到驗證頁面，請直接複製下方網址到瀏覽器內驗證：
+    #                         </p>
+    #                         <p style="word-wrap: break-word;">
+    #                             <a href="{confirm_url}" style="color: #ff8c42; text-decoration: none;">{confirm_url}</a>
+    #                         </p>
+    #                     </td>
+    #                 </tr>
+    #                 <tr>
+    #                     <td align="center" style="font-size: 12px; color: #999; padding: 20px;">
+    #                         <p>此 Email 是系統自動發送，請勿直接回覆。</p>
+    #                     </td>
+    #                 </tr>
+    #             </table>
+    #         </body>
+    #         </html>
+    #         """
+    # msg.html = html
+    # mail.send(msg)
 
-    return jsonify({"message": "User registered successfully. Please check your email to verify your account."}), 201
-
+# 驗證 Email 的頁面 (暫時棄用)
 @user_bp.route('/verify', methods=['GET'])
 def verify_user_email():
     token = request.args.get('token')
@@ -170,6 +173,7 @@ def verify_user_email():
 
     return render_template('email_verify_success.html')
 
+# 醫護人員登入
 @user_bp.route('/signin', methods=['POST'])
 def signin():
     data = request.get_json()
@@ -198,7 +202,7 @@ def signin():
     return jsonify({
         "message": "Login successful",
         "access_token": access_token,
-        "role": "M",
+        "role": "M"
     }), 200
 
 # 醫護人員取得所有病患的資料
@@ -215,10 +219,10 @@ def get_patients():
         if not user or not user.is_active:
             return jsonify({"message": "Invalid user."}), 404
         
-        patients_objs = Patient.query.all()
+        patient_data = Patient.query.options(joinedload(Patient.symptom_records)).all()
         return jsonify({
             "message": "",
-            "patients": [p.to_dict() for p in patients_objs]
+            "patients": [p.to_dict() for p in patient_data]
         }), 200
     
     return method()
@@ -234,12 +238,14 @@ def get_data():
     def method():
         patient_id = get_jwt_identity()
         patient = Patient.query.filter_by(id=patient_id).first()
+        patient_symptom = Symptom.query.filter_by(patient_id=patient_id).all()
         if not patient:
             return jsonify({"message": "Error."}), 404
 
         return jsonify({
             "message": "",
-            "patient": patient.to_dict()
+            "patient": patient.to_dict(),
+            "symptom_data": [s.to_dict() for s in patient_symptom]
         }), 200
     return method()
 
@@ -359,26 +365,33 @@ def get_pas_data_on_date():
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         patient_id = request.args.get('pid')
+        role = request.args.get('role')
         if not start_date or not end_date or not validate_date(start_date) or not validate_date(end_date):
-            return jsonify({"message": "Missing date"}), 400
+            return jsonify({"message": "Missing data"}), 400
+
+        # 若 role = 'P' 表示 frontend 是病人自己填寫資料, 此時 Patient id 就是上面的 user_id, 而不會從 Query string 前來
+        # 若 role = 'M' 表示 frontend 是醫護人員協助填寫病人資料, 此時的 Patient id 會從 Query string 取得, user_id 則是 醫護人員的 ID
+        if role is None and patient_id is None:
+            return jsonify({"message": "Missing data"}), 400
         
-        if patient_id:
-            psa = PSA.query.filter(
-                and_(
-                    PSA.patient_id == patient_id,
-                    PSA.date.between(start_date, end_date)
-                )
-            ).all()
-        else:
+        psa = None
+        if role == 'P':
             psa = PSA.query.filter(
                 and_(
                     PSA.patient_id == user_id,
                     PSA.date.between(start_date, end_date)
                 )
             ).all()
+        elif role == 'M':
+            psa = PSA.query.filter(
+                and_(
+                    PSA.patient_id == patient_id,
+                    PSA.date.between(start_date, end_date)
+                )
+            ).all()
 
         if not psa:
-            return jsonify({"message": "PSA data not found"}), 404
+            return jsonify({"message": "No PSA data"}), 200
         
         return jsonify({
             "message": "",
@@ -387,7 +400,7 @@ def get_pas_data_on_date():
     
     return method()
 
-# 病患更新/新增 PSA 資料
+# 醫護人員、病患更新/新增 PSA 資料
 @patient_bp.route('/api/patient/psa', methods=['PATCH', 'OPTIONS'])
 @cross_origin()
 def update_psa_data():
@@ -397,16 +410,24 @@ def update_psa_data():
     @jwt_required()
     def method():
         try:
-            patient_id = get_jwt_identity()
-            if not patient_id:
-                return jsonify({"message": "Missing patient_id"}), 400
+            user_id = get_jwt_identity()
+            if not user_id:
+                return jsonify({"message": "Missing ID"}), 400
+            
             data = request.get_json()
             date = data.get('date')
             psa = data.get('psa')
+            patient_id = data.get('pid')
+
             if not date or not psa:
                 return jsonify({"message": "Missing required fields"}), 400
             
-            row = PSA.query.filter_by(patient_id=patient_id, date=date).first()
+            row = None
+            if patient_id is not None:
+                row = PSA.query.filter_by(patient_id=patient_id, date=date).first()
+            else:
+                row = PSA.query.filter_by(patient_id=user_id, date=date).first()
+
             if row:
                 row.psa = psa
                 try:
@@ -415,7 +436,11 @@ def update_psa_data():
                     db.session.rollback()
                     return jsonify({"message": "Create Patient Error"}), 400
             else:
-                new_psa = PSA(patient_id=patient_id, date=date, psa=psa)
+                new_psa = None
+                if patient_id is not None:
+                    new_psa = PSA(patient_id=patient_id, date=date, psa=psa)
+                else:
+                    new_psa = PSA(patient_id=user_id, date=date, psa=psa)
                 try:
                     db.session.add(new_psa)
                     db.session.commit()
@@ -435,7 +460,83 @@ def update_psa_data():
     
     return method()
 
-# 病患更新資料
+# 病患根據日期取得症狀問卷資料
+@patient_bp.route('/api/patient/symptom_survey', methods=['GET', 'OPTIONS'])
+@cross_origin()
+def get_survey_data_on_date():
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    @jwt_required()
+    def method():
+        patient_id = get_jwt_identity()
+        if not patient_id:
+            return jsonify({"message": "Missing patient_id"}), 400
+        
+        date = request.args.get('date')
+        if not date or not validate_date(date):
+            return jsonify({"message": "Missing date"}), 400
+        
+        row = Symptom.query.filter_by(patient_id=patient_id, date=date).first()
+        if not row:
+            return jsonify({"message": "Symptom data not found"}), 404
+        
+        return jsonify({
+            "message": "",
+            "symptom": row.symptom
+        }), 200
+        
+    return method()
+
+# 病患更新症狀問卷資料
+@patient_bp.route('/api/patient/symptom_survey', methods=['PATCH', 'OPTIONS'])
+@cross_origin()
+def update_survey_data():
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    @jwt_required()
+    def method():
+        patient_id = get_jwt_identity()
+        if not patient_id:
+            return jsonify({"message": "Missing patient_id"}), 400
+        
+        patient = Patient.query.filter_by(id=patient_id).first()
+        if not patient:
+            return jsonify({"message": "Patient Not Found"}), 404
+        
+        data = request.get_json()
+        survey_data = data.get('survey_data')
+        date = data.get('date')
+
+        if not survey_data or not date or not validate_date(date):
+            return jsonify({"message": "Missing required fields"}), 400
+        
+        row = Symptom.query.filter_by(patient_id=patient_id, date=date).first()
+        if row:
+            row.survey_data = survey_data
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify({"message": "Update Symptom Error"}), 400
+        else:
+            new_symptom = Symptom(patient_id=patient_id, date=date, survey_data=survey_data)
+            try:
+                db.session.add(new_symptom)
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify({"message": "Create Symptom Error"}), 400
+
+        return jsonify({
+            "message": "Survey data updated successfully",
+            "survey_data": survey_data
+        }), 200
+    
+    return method()
+
+# 病患更新影片、文件閱讀進度
 @patient_bp.route('/api/patient/update_data', methods=['PATCH', 'OPTIONS'])
 @cross_origin()
 def update_patient_data():

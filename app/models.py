@@ -42,6 +42,7 @@ class Patient(db.Model):
     invide_code = db.Column(db.String(255), nullable=False)
     birthday = db.Column(db.String(255), nullable=False)
     survey_data = db.Column(db.JSON, nullable=True)
+    symptom_records = db.relationship('Symptom', backref='patient', lazy='joined')
     video_progression_data = db.Column(db.JSON, nullable=True)
     document_progression_data = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
@@ -55,6 +56,7 @@ class Patient(db.Model):
             "name": self.name,
             "birthday": self.birthday,
             "survey_data": self.survey_data,
+            "symptom_records": [symptom.to_dict() for symptom in self.symptom_records],
             "video_progression_data": self.video_progression_data,
             "document_progression_data": self.document_progression_data,
             "created_at": self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -79,6 +81,27 @@ class PSA(db.Model):
             "patient_id": self.patient_id,
             "date": self.date,
             "psa": self.psa,
+            "created_at": self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "updated_at": self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "deleted_at": self.deleted_at.strftime('%Y-%m-%d %H:%M:%S') if self.deleted_at else None
+        }
+
+class Symptom(db.Model):
+    __tablename__ = 'patient_symptom_data'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    date = db.Column(db.String(255), nullable=False)
+    survey_data = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    deleted_at = db.Column(db.DateTime, nullable=True)
+
+    def to_dict(self):
+        return {
+            "patient_id": self.patient_id,
+            "date": self.date,
+            "survey_data": self.survey_data,
             "created_at": self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             "updated_at": self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             "deleted_at": self.deleted_at.strftime('%Y-%m-%d %H:%M:%S') if self.deleted_at else None
