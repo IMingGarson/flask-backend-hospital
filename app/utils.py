@@ -1,8 +1,28 @@
 from flask import current_app
 from datetime import datetime
 from itsdangerous import URLSafeTimedSerializer
-import bcrypt
 from email_validator import validate_email, EmailNotValidError
+import bcrypt
+import requests
+
+def send_push_notification(push_token, title, body):
+    print('This job is run every 10 seconds.')
+    # message = {
+    #     "to": push_token,
+    #     "sound": "default",
+    #     "title": title,
+    #     "body": body,
+    # }
+    # response = requests.post(
+    #     "https://exp.host/--/api/v2/push/send",
+    #     headers={
+    #         "Accept": "application/json",
+    #         "Accept-Encoding": "gzip, deflate",
+    #         "Content-Type": "application/json",
+    #     },
+    #     json=message,
+    # )
+    # return response.status_code, response.json()
 
 def validate_date(date_str):
     try:

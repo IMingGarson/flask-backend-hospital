@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, url_for, current_app, render_template
 from sqlalchemy.orm import joinedload
 from app.models import db, User, Patient, PSA, Symptom
-from app.utils import validate_date, validate, hash_password, check_password, generate_confirmation_token, confirm_token, validate_email
+from app.utils import send_push_notification, validate_date, validate, hash_password, check_password, generate_confirmation_token, confirm_token, validate_email
 from flask_mail import Message, Mail
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
@@ -20,6 +20,40 @@ def test_route():
         "message": "",
         "patients": [u.to_dict() for u in user]
     }), 200
+
+@user_bp.route('/notify_patient', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def notify_patient():
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    @jwt_required
+    def method():
+        data = request.get_json()
+        pid = data.get('patient_id')
+        type = data.get('type')
+        target_id = data.get('target_id')
+
+        patient = Patient.query.filter_by(id=pid).first()
+        if not patient or not patient.push_token:
+            return jsonify({"message": "Invalid patient."}), 400
+        if type not in ('video', 'document', 'all'):
+            return jsonify({"message": "Invalid type."}), 400
+        
+        title, body = '📢您有一則通知', ''
+        if type == 'all':
+            body = '提醒您記得觀看影片與文件喔 😊'
+        elif type == 'video':
+            body = f'提醒您記得觀看第 {target_id} 部影片喔 😊'
+        elif type == 'document':
+            body = f'提醒您記得閱讀第 {target_id} 篇文件喔 😊'
+
+        send_push_notification(patient.push_token, title, body)
+
+        return jsonify({"message": "success"}), 200
+    
+    return method()
+
 
 # 寄送驗證 Email (暫時棄用)
 @user_bp.route('/send_verify_email', methods=['GET'])
@@ -262,9 +296,10 @@ def add_patient():
         password = data.get('password')
         birthday = data.get('birthday')
         invide_code = data.get('inviteCode')
+        push_token = data.get('pushToken')
 
-        if not name or not email or not password or not birthday or not invide_code or invide_code != '123456':
-            return jsonify({"message": "Patient name and email are required."}), 400
+        if not name or not email or not password or not birthday or not invide_code or invide_code != '123456' or not push_token:
+            return jsonify({"message": "Missing data."}), 400
 
         existing_patient = Patient.query.filter_by(email=email).first()
         if existing_patient:
@@ -280,6 +315,7 @@ def add_patient():
             video_progression_data={},
             document_progression_data={},
             survey_data={},
+            push_token=push_token,
         )
         try:
             db.session.add(new_patient)
@@ -295,6 +331,7 @@ def add_patient():
                 "name": new_patient.name,
                 "email": new_patient.email,
                 "birthday": new_patient.birthday,
+                "push_token": new_patient.push_token,
                 "invide_code": new_patient.invide_code
             }
         }), 201

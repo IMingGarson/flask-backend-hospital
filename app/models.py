@@ -39,6 +39,7 @@ class Patient(db.Model):
     name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    push_token = db.Column(db.String(255), nullable=True)
     invide_code = db.Column(db.String(255), nullable=False)
     birthday = db.Column(db.String(255), nullable=False)
     survey_data = db.Column(db.JSON, nullable=True)
@@ -55,6 +56,7 @@ class Patient(db.Model):
             "email": self.email,
             "name": self.name,
             "birthday": self.birthday,
+            "push_token": self.push_token,
             "survey_data": self.survey_data,
             "symptom_records": [symptom.to_dict() for symptom in self.symptom_records],
             "video_progression_data": self.video_progression_data,
