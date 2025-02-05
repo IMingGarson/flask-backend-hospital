@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  deploy-to-ec2:
-    run-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
     steps:
     - name: Check out
