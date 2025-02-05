@@ -18,7 +18,8 @@ def test_route():
     user = User.query.all()
     return jsonify({
         "message": "",
-        "patients": [u.to_dict() for u in user]
+        "patients": [u.to_dict() for u in user],
+        "CI/CD": "Success"
     }), 200
 
 @user_bp.route('/notify_patient', methods=['POST', 'OPTIONS'])
@@ -48,9 +49,9 @@ def notify_patient():
         elif type == 'document':
             body = f'提醒您記得閱讀第 {target_id} 篇文件喔 😊'
 
-        send_push_notification(patient.push_token, title, body)
+        status, message = send_push_notification(patient.push_token, title, body)
 
-        return jsonify({"message": "success"}), 200
+        return jsonify({"message": message, "status": status}), 200
     
     return method()
 
