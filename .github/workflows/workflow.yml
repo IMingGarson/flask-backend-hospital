@@ -27,5 +27,5 @@ jobs:
           port: 22
           script: |
             cd /home/ubuntu/flask-backend-hospital
-            docker-compose down
-            docker-compose up -d --remove-orphans
+            docker compose down
+            docker compose up -d --remove-orphans
