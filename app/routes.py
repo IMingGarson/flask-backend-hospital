@@ -19,7 +19,7 @@ def test_route():
     return jsonify({
         "message": "",
         "patients": [u.to_dict() for u in user],
-        "CI/CD": "Success"
+        "CI/CD": "Success part 2"
     }), 200
 
 @user_bp.route('/notify_patient', methods=['POST', 'OPTIONS'])

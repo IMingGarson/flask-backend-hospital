@@ -25,7 +25,6 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          timeout: 180
           script: |
-            cd /home/ubuntu/flask-backend-hospital
-            docker compose down
-            docker compose up -d --remove-orphans
+            sh /home/ubuntu/flask-backend-hospital/deploy.sh
