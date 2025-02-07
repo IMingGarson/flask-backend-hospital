@@ -27,4 +27,6 @@ jobs:
           port: 22
           script: |
             cd /home/ubuntu/flask-backend-hospital
-            sh deploy.sh
+            git pull
+            docker compose down
+            docker compose up -d
