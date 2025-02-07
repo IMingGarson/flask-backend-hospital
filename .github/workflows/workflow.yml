@@ -26,7 +26,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            cd /home/ubuntu/flask-backend-hospital
-            git pull
+            git config --global --add safe.directory /home/${{ secrets.EC2_USER }}/flask-backend-hospital
+            cd /home/${{ secrets.EC2_USER }}/flask-backend-hospital
+            git pull origin main
             docker compose down
             docker compose up -d
