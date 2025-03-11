@@ -18,7 +18,7 @@ def test_route():
     user = User.query.all()
     return jsonify({
         "message": "",
-        "patients": [u.to_dict() for u in user],
+        "users": [u.to_dict() for u in user],
         "CI/CD": "Success part 3. Let's go dude"
     }), 200
 
@@ -54,7 +54,6 @@ def notify_patient():
         return jsonify({"message": message, "status": status}), 200
     
     return method()
-
 
 # 寄送驗證 Email (暫時棄用)
 @user_bp.route('/send_verify_email', methods=['GET'])
@@ -297,9 +296,8 @@ def add_patient():
         password = data.get('password')
         birthday = data.get('birthday')
         invide_code = data.get('inviteCode')
-        push_token = data.get('pushToken')
 
-        if not name or not email or not password or not birthday or not invide_code or invide_code != '123456' or not push_token:
+        if not name or not email or not password or not birthday or not invide_code or invide_code != '123456':
             return jsonify({"message": "Missing data."}), 400
 
         existing_patient = Patient.query.filter_by(email=email).first()
@@ -316,7 +314,6 @@ def add_patient():
             video_progression_data={},
             document_progression_data={},
             survey_data={},
-            push_token=push_token,
         )
         try:
             db.session.add(new_patient)
@@ -332,10 +329,45 @@ def add_patient():
                 "name": new_patient.name,
                 "email": new_patient.email,
                 "birthday": new_patient.birthday,
-                "push_token": new_patient.push_token,
                 "invide_code": new_patient.invide_code
             }
         }), 201
+    return method()
+
+# 病患更新 Push Token 的資料
+@patient_bp.route('/api/patient/token', methods=['PATCH', 'OPTIONS'])
+@cross_origin()
+def update_patient():
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    @jwt_required()
+    def method():
+        try:
+            patient_id = get_jwt_identity()
+            if not patient_id:
+                return jsonify({"message": "Missing ID"}), 400
+            
+            data = request.get_json()
+            push_token = data.get('token')
+
+            if not push_token:
+                return jsonify({"message": "Missing required fields"}), 400
+
+            patient = Patient.query.filter_by(id=patient_id).first()
+            if not patient:
+                return jsonify({"message": "Patient Not Found"}), 400
+            
+            patient.push_token = push_token
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+        except Exception as e:
+            return jsonify({"message": "Patient Error: " + str(e)}), 500
+
+        return jsonify({"message": "Update Token Succeeded"}), 200
+    
     return method()
 
 # 病患登入
@@ -363,6 +395,7 @@ def patient_signin():
     return jsonify({
         "message": "Login successful",
         "access_token": access_token,
+        "data": patient.to_dict(),
         "role": "P",
     }), 200
     
