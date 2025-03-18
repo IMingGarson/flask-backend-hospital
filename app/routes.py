@@ -28,7 +28,7 @@ def notify_patient():
     if request.method == 'OPTIONS':
         return '', 200
 
-    @jwt_required
+    @jwt_required()
     def method():
         data = request.get_json()
         pid = data.get('patient_id')
@@ -36,7 +36,7 @@ def notify_patient():
         target_id = data.get('target_id')
 
         patient = Patient.query.filter_by(id=pid).first()
-        if not patient or not patient.push_token:
+        if not patient or not patient.push_token or not patient.push_token.startswith('ExponentPushToken'):
             return jsonify({"message": "Invalid patient."}), 400
         if type not in ('video', 'document', 'all'):
             return jsonify({"message": "Invalid type."}), 400
@@ -48,9 +48,8 @@ def notify_patient():
             body = f'提醒您記得觀看第 {target_id} 部影片喔 😊'
         elif type == 'document':
             body = f'提醒您記得閱讀第 {target_id} 篇文件喔 😊'
-
+            
         status, message = send_push_notification(patient.push_token, title, body)
-
         return jsonify({"message": message, "status": status}), 200
     
     return method()

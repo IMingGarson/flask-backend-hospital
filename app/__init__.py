@@ -29,7 +29,7 @@ def create_app():
         with app.app_context():
             patients = Patient.query.all()
             for patient in patients:
-                if patient.push_token:
+                if patient.push_token and patient.push_token.startswith("ExponentPushToken"):
                     send_push_notification(patient.push_token, "Scheduled Notification", "This is a test!")
                     time.sleep(0.5)
 
