@@ -28,12 +28,14 @@ def create_app():
     def send_periodical_push_notification():
         with app.app_context():
             patients = Patient.query.all()
+            # print("人數 {} 位".format(len(patients)))
             for patient in patients:
                 if patient.push_token and patient.push_token.startswith("ExponentPushToken"):
-                    send_push_notification(patient.push_token, "Scheduled Notification", "This is a test!")
+                    _, _ = send_push_notification(patient.push_token, "你好", "新的開始，祝您有個愉快的一週！")
                     time.sleep(0.5)
 
     scheduler.add_job(send_periodical_push_notification, trigger='cron', day_of_week='mon')
+    # scheduler.add_job(send_periodical_push_notification, trigger='interval', seconds=20)
 
     return app
 
