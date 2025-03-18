@@ -21,6 +21,7 @@ WORKDIR /app
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip
+RUN pip install exponent_server_sdk
 RUN pip install -r requirements.txt
 
 # Copy project
