@@ -4,6 +4,9 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
     JWT_IDENTITY_CLAIM = os.environ.get('JWT_IDENTITY_CLAIM')
 
+    broker_url = os.environ.get('CELERY_BROKER_URL')
+    result_backend = os.environ.get('CELERY_RESULT_BACKEND')
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Mail settings
@@ -30,3 +33,6 @@ class Config:
         host=MYSQL_HOST,
         database=MYSQL_DATABASE
     )
+
+    NATIVE_NOTIFY_APP_ID = os.environ.get('NATIVE_NOTIFY_APP_ID')
+    NATIVE_NOTIFY_APP_TOKEN = os.environ.get('NATIVE_NOTIFY_APP_TOKEN')

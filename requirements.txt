@@ -13,4 +13,5 @@ flask_jwt_extended
 email_validator
 Flask-APScheduler
 requests
-exponent-server-sdk==2.1.0
+celery
+redis
