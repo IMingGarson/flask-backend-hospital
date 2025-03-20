@@ -17,7 +17,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 1
       start_period: 30s
 
   redis:
@@ -29,7 +29,7 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 1
   web:
     build: .
     command: gunicorn -b 0.0.0.0:5000 app:app
@@ -65,8 +65,8 @@ services:
 
   celery:
     build: .
-    command: celery -A app.celery_app.celery worker --loglevel=info
-    restart: always
+    command: celery -A app.celery_app.celery worker --loglevel=info --concurrency=1
+    restart: "no"
     volumes:
       - .:/app
     environment:
