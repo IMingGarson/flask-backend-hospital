@@ -15,22 +15,20 @@ services:
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
+      interval: 5s
+      timeout: 1s
       retries: 1
-      start_period: 30s
 
-  # redis:
-  #   command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-  #   image: redis:latest
-  #   restart: always
-  #   ports:
-  #     - "6379:6379"
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 1
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 1s
+      retries: 1
   web:
     build: .
     command: gunicorn -b 0.0.0.0:5000 app:app
@@ -61,66 +59,63 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      # redis:
-      #   condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  # celery:
-  #   build: .
-  #   command: celery -A app.celery_app.celery worker --loglevel=info
-  #   restart: always
-  #   volumes:
-  #     - .:/app
-  #   environment:
-  #     - FLASK_ENV=${FLASK_ENV}
-  #     - MAIL_SERVER=${MAIL_SERVER}
-  #     - MAIL_PORT=${MAIL_PORT}
-  #     - MAIL_USE_TLS=${MAIL_USE_TLS}
-  #     - MAIL_USE_SSL=${MAIL_USE_SSL}
-  #     - MAIL_USERNAME=${MAIL_USERNAME}
-  #     - MAIL_PASSWORD=${MAIL_PASSWORD}
-  #     - MYSQL_PORT=${MYSQL_PORT}
-  #     - MYSQL_DATABASE=${MYSQL_DATABASE}
-  #     - MYSQL_USER=${MYSQL_USER}
-  #     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-  #     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-  #     - MYSQL_HOST=${MYSQL_HOST}
-  #     - SECRET_KEY=${SECRET_KEY}
-  #     - CELERY_BROKER_URL=${CELERY_BROKER_URL}
-  #     - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - db
-  #     - redis
-
-  # celery-beat:
-  #   build: .
-  #   command: celery -A app.celery_app.celery beat --loglevel=info
-  #   restart: always
-  #   volumes:
-  #     - .:/app
-  #   environment:
-  #     - FLASK_ENV=${FLASK_ENV}
-  #     - MAIL_SERVER=${MAIL_SERVER}
-  #     - MAIL_PORT=${MAIL_PORT}
-  #     - MAIL_USE_TLS=${MAIL_USE_TLS}
-  #     - MAIL_USE_SSL=${MAIL_USE_SSL}
-  #     - MAIL_USERNAME=${MAIL_USERNAME}
-  #     - MAIL_PASSWORD=${MAIL_PASSWORD}
-  #     - MYSQL_PORT=${MYSQL_PORT}
-  #     - MYSQL_DATABASE=${MYSQL_DATABASE}
-  #     - MYSQL_USER=${MYSQL_USER}
-  #     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-  #     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-  #     - MYSQL_HOST=${MYSQL_HOST}
-  #     - SECRET_KEY=${SECRET_KEY}
-  #     - CELERY_BROKER_URL=${CELERY_BROKER_URL}
-  #     - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - db
-  #     - redis
+  celery:
+    build: .
+    command: celery -A app.celery_app.celery worker --loglevel=info --concurrency=1 --uid=nobody --gid=nogroup
+    restart: "no"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=${FLASK_ENV}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USE_TLS=${MAIL_USE_TLS}
+      - MAIL_USE_SSL=${MAIL_USE_SSL}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    env_file:
+      - .env
+    depends_on:
+      - web
+  celery-beat:
+    build: .
+    command: celery -A app.celery_app.celery beat --loglevel=info
+    restart: always
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=${FLASK_ENV}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USE_TLS=${MAIL_USE_TLS}
+      - MAIL_USE_SSL=${MAIL_USE_SSL}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - SECRET_KEY=${SECRET_KEY}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    env_file:
+      - .env
+    depends_on:
+      - web
 
 volumes:
   db_data:

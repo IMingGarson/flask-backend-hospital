@@ -27,9 +27,10 @@ def make_celery(app):
         app.import_name,
         broker=app.config.get('broker_url'),
         backend=app.config.get('result_backend'),
-        include=['app.tasks']
+        include=['app.tasks'],
     )
     celery.conf.update(app.config)
+    celery.conf.update(broker_connection_retry_on_startup=True)
     
     class ContextTask(celery.Task):
         abstract = True
