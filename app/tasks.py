@@ -11,7 +11,7 @@ def send_periodical_push_notification():
     url = "https://app.nativenotify.com/api/indie/notification"
     for patient in patients:
         payload = {
-            'subID': 'PUSH_TOKEN_' + str(patient.id),
+            'subID': 'PUSH_ID_' + str(patient.id),
             'appId': current_app.config['NATIVE_NOTIFY_APP_ID'],
             'appToken': current_app.config['NATIVE_NOTIFY_APP_TOKEN'],
             'title': '你好',
