@@ -296,7 +296,7 @@ def add_patient():
         birthday = data.get('birthday')
         invide_code = data.get('inviteCode')
 
-        if not name or not email or not password or not birthday or not invide_code or invide_code != '123456':
+        if not name or not email or not password or not birthday or not invide_code or invide_code != current_app.config['INVITE_CODE']:
             return jsonify({"message": "Missing data."}), 400
 
         existing_patient = Patient.query.filter_by(email=email).first()

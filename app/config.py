@@ -36,3 +36,5 @@ class Config:
 
     NATIVE_NOTIFY_APP_ID = os.environ.get('NATIVE_NOTIFY_APP_ID')
     NATIVE_NOTIFY_APP_TOKEN = os.environ.get('NATIVE_NOTIFY_APP_TOKEN')
+
+    INVITE_CODE = os.environ.get('INVITE_CODE')
