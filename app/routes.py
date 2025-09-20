@@ -559,7 +559,7 @@ def get_survey_data_on_date():
     return method()
 
 # 醫護人員協助更新問卷
-@user_bp.route('/api/update_patient_symptom', methods=['OPTIONS', 'PATCH'])
+@user_bp.route('/update_patient_symptom', methods=['OPTIONS', 'PATCH'])
 @cross_origin
 def update_patient_survey():
     if request.method == 'OPTIONS':
