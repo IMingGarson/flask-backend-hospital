@@ -558,6 +558,52 @@ def get_survey_data_on_date():
         
     return method()
 
+# 醫護人員協助更新問卷
+@user_bp.route('/api/update_patient_symptom', methods=['OPTIONS', 'PATCH'])
+@cross_origin
+def update_patient_survey():
+    if request.method == 'OPTIONS':
+        return '', 200
+    @jwt_required()
+    def method():
+        user_id = get_jwt_identity()
+        if not user_id:
+            return jsonify({"message": "Missing user_id"}), 400
+        user = User.query.filter_by(id=user_id).first()
+        if not user:
+            return jsonify({"message": "Invalid user."}), 404
+
+        data = request.get_json()
+        survey_data = data.get('survey_data')
+        patient_id = data.get('patient_id')
+        date = data.get('date')
+        if not survey_data or not date or not validate_date(date):
+            return jsonify({"message": "Missing required fields"}), 400
+        
+        row = Symptom.query.filter_by(patient_id=patient_id, date=date).first()
+        if row:
+            row.survey_data = survey_data
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify({"message": "Update Symptom Error"}), 400
+        else:
+            new_symptom = Symptom(patient_id=patient_id, date=date, survey_data=survey_data)
+            try:
+                db.session.add(new_symptom)
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify({"message": "Create Symptom Error"}), 400
+
+        return jsonify({
+            "message": "Survey data updated successfully",
+            "survey_data": survey_data
+        }), 200
+
+    return method()
+
 # 病患更新症狀問卷資料
 @patient_bp.route('/api/patient/symptom_survey', methods=['PATCH', 'OPTIONS'])
 @cross_origin()
