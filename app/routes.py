@@ -560,10 +560,11 @@ def get_survey_data_on_date():
 
 # 醫護人員協助更新問卷
 @user_bp.route('/update_patient_symptom', methods=['OPTIONS', 'PATCH'])
-@cross_origin
+@cross_origin()
 def update_patient_survey():
     if request.method == 'OPTIONS':
         return '', 200
+    
     @jwt_required()
     def method():
         user_id = get_jwt_identity()
