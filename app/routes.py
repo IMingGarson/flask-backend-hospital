@@ -412,10 +412,9 @@ def patient_signin():
     patient = (
         Patient.query
         .filter_by(email=email)
-        .filter(Patient.deleted_at.isnot(None))
         .first()
     )
-    if not patient:
+    if not patient or patient.deleted_at is not None:
         return jsonify({"message": "User not found"}), 404
     
     if not check_password(password, patient.password):
