@@ -6,8 +6,8 @@ from flask_mail import Message, Mail
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
-from datetime import timedelta
 from flask_cors import cross_origin
+from datetime import datetime, timezone, timedelta
 
 mail = Mail()
 user_bp = Blueprint('user', __name__, url_prefix='/api/user')
@@ -260,6 +260,36 @@ def get_patients():
     
     return method()
 
+# 醫護人員刪除病患帳號
+@user_bp.route('/delete_patient', methods=['POST'])
+@cross_origin()
+def delete_patient():
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    @jwt_required()
+    def method():
+        user_id = get_jwt_identity()
+        user = User.query.filter_by(id=user_id).first()
+        if not user:
+            return jsonify({"message": "Error."}), 404
+        
+        data = request.get_json()
+        pid = data.get('patient_id')
+        patient = Patient.query.filter_by(id=pid).first()
+        if not patient:
+            return jsonify({"message": "Patient Not Found"}), 404
+        
+        patient.deleted_at = datetime.now(timezone.utc)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({"message": "Delete Patient Error"}), 400
+        return jsonify({"message": "Patient deleted successfully."}), 200
+    
+    return method()
+
 # 病患取得自己的資料
 @patient_bp.route('/api/patient/get', methods=['GET', 'OPTIONS'])
 @cross_origin()
@@ -379,7 +409,12 @@ def patient_signin():
     if not email or not password:
         return jsonify({"message": "Missing email or password"}), 400
     
-    patient = Patient.query.filter_by(email=email).first()
+    patient = (
+        Patient.query
+        .filter_by(email=email)
+        .filter(Patient.deleted_at.isnot(None))
+        .first()
+    )
     if not patient:
         return jsonify({"message": "User not found"}), 404
     
@@ -411,6 +446,15 @@ def get_psa_data():
         if not patient_id:
             return jsonify({"message": "Missing patient_id"}), 400
         
+        patient = (
+            Patient.query
+            .filter_by(id=patient_id)
+            .filter(Patient.deleted_at.isnot(None))
+            .first()
+        )
+        if not patient:
+            return jsonify({"message": "Patient Not Found"}), 404
+
         psa_objs = PSA.query.filter_by(patient_id=patient_id).all()
         return jsonify({
             "message": "",
